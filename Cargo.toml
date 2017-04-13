@@ -1,0 +1,13 @@
+[package]
+name = "fiestapinata"
+version = "0.1.0"
+authors = ["JanKeim <jan.keim@protonmail.com>"]
+
+[[bin]]
+name = "fiestapinata"
+
+[dependencies]
+piston = "0.31.4"
+piston2d-graphics = "0.21.1"
+pistoncore-glutin_window = "0.35.1"
+piston2d-opengl_graphics = "0.42.1"
