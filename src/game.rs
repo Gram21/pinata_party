@@ -2,11 +2,13 @@ use constants::*;
 use graphics::*;
 use opengl_graphics::{GlGraphics, OpenGL, Texture};
 use piston::input::*;
+use random::MTRng32;
 use std::path::Path;
 
 
 pub struct Game {
     gl: GlGraphics, // OpenGL drawing backend.
+    rand: MTRng32, // TODO other rng generator?
     cursor_position: (f64, f64),
     timer: f64,
     background: Image,
@@ -20,23 +22,26 @@ pub struct Game {
 
 impl Game {
     pub fn new(opengl: OpenGL) -> Self {
+        let mut rand = MTRng32::new(42); // TODO better seed
+
         let mut evil_targets: Vec<Target> = Vec::new();
-        for i in 0..3 {
-            let t = Target::new(50.0 + 50.0 * (i as f64), 50.0, 50.0, 50.0, 30, 5 + i);
+        for _ in 0..3 {
+            let t = Target::new_rnd(&mut rand);
             evil_targets.push(t);
         }
 
         let mut hero_targets: Vec<Target> = Vec::new();
-        for i in 0..3 {
-            let t = Target::new(50.0 + 50.0 * (i as f64), 125.0, 50.0, 50.0, 30, 5 + i);
+        for _ in 0..3 {
+            let t = Target::new_rnd(&mut rand);
             hero_targets.push(t);
         }
 
         Game {
             gl: GlGraphics::new(opengl),
-            cursor_position: (240.0, 136.0),
+            rand: rand,
+            cursor_position: (WINDOW_SIZE.0 / 2.0, WINDOW_SIZE.1 / 2.0),
             timer: 0.0,
-            background: Image::new().rect([0.0, 0.0, 480.0, 272.0]),
+            background: Image::new().rect([0.0, 0.0, WINDOW_SIZE.0, WINDOW_SIZE.1]),
             bg_texture: Texture::from_path(Path::new(TEXTURE_BG)).unwrap(),
             aim_texture: Texture::from_path(Path::new(TEXTURE_AIM)).unwrap(),
             evil_texture: Texture::from_path(Path::new(TEXTURE_TRUMP)).unwrap(),
@@ -95,10 +100,10 @@ impl Game {
 
         // create new targets if old ones died
         while self.hero_targets.len() < 3 {
-            self.hero_targets.push(Target::new_rnd());
+            self.hero_targets.push(Target::new_rnd(&mut self.rand));
         }
         while self.evil_targets.len() < 3 {
-            self.evil_targets.push(Target::new_rnd());
+            self.evil_targets.push(Target::new_rnd(&mut self.rand));
         }
     }
 
@@ -118,10 +123,14 @@ impl Game {
     pub fn process_mouse(&mut self, m: &MouseButton) {
         match m {
             &MouseButton::Left => {
-                for i in Target::check_for_hit(&mut self.evil_targets, self.cursor_position).iter().rev() {
+                for i in Target::check_for_hit(&mut self.evil_targets, self.cursor_position)
+                        .iter()
+                        .rev() {
                     self.evil_targets.remove(*i);
                 }
-                for i in Target::check_for_hit(&mut self.hero_targets, self.cursor_position).iter().rev() {
+                for i in Target::check_for_hit(&mut self.hero_targets, self.cursor_position)
+                        .iter()
+                        .rev() {
                     self.hero_targets.remove(*i);
                 }
             }
@@ -155,16 +164,24 @@ impl Target {
         }
     }
 
-    pub fn new_rnd() -> Self {
+    pub fn new_rnd(rand: &mut MTRng32) -> Self {
         //TODO
+        let (x, y) = Self::get_rnd_position(rand);
         Target {
-            x: 150.0,
-            y: 50.0,
+            x: x,
+            y: y,
             width: 50.0,
             height: 50.0,
             bounty: 30,
             lifetime: 6,
         }
+    }
+
+    fn get_rnd_position(rand: &mut MTRng32) -> (f64, f64) {
+        // TODO: check if rnd_position is okay
+        let x = (rand.rand() % WINDOW_SIZE.0 as u32) as f64;
+        let y = (rand.rand() % WINDOW_SIZE.1 as u32) as f64;
+        (x, y)
     }
 
     fn coord_is_inside(&mut self, x: f64, y: f64) -> bool {

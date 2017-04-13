@@ -5,7 +5,9 @@ extern crate opengl_graphics;
 
 pub mod game;
 pub mod constants;
+pub mod random;
 
+use constants::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::OpenGL;
 use piston::event_loop::*;
@@ -17,7 +19,7 @@ fn main() {
     let opengl = OpenGL::V3_2;
 
     // Create an Glutin window.
-    let mut window: Window = WindowSettings::new("Fiesta Pinata", [480, 272])
+    let mut window: Window = WindowSettings::new("Fiesta Pinata", [WINDOW_USIZE.0, WINDOW_USIZE.1])
         .opengl(opengl)
         .fullscreen(false)
         .exit_on_esc(true)
