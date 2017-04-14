@@ -152,11 +152,18 @@ pub struct Target {
     pub height: f64,
     pub bounty: u16,
     pub lifetime: f64,
-    pub  movement: (f64, f64),
+    pub movement: (f64, f64),
 }
 
 impl Target {
-    pub fn new(x: f64, y: f64, width: f64, height: f64, bounty: u16, lifetime: f64, movement: (f64,f64)) -> Self {
+    pub fn new(x: f64,
+               y: f64,
+               width: f64,
+               height: f64,
+               bounty: u16,
+               lifetime: f64,
+               movement: (f64, f64))
+               -> Self {
         Target {
             x: x,
             y: y,
@@ -185,9 +192,9 @@ impl Target {
     }
 
     pub fn get_rnd_movement(rand: &mut MTRng32) -> (f64, f64) {
-        let x_sgn = if rand.rand() & 1 == 1 {-1.0} else {1.0} ;
+        let x_sgn = if rand.rand() & 1 == 1 { -1.0 } else { 1.0 };
         let x = (rand.rand() % 20 as u32) as f64;
-        let y_sgn = if rand.rand() & 1 == 1 {-1.0} else {1.0};
+        let y_sgn = if rand.rand() & 1 == 1 { -1.0 } else { 1.0 };
         let y = (rand.rand() % 20 as u32) as f64;
         (x_sgn * x, y_sgn * y)
     }
@@ -200,7 +207,7 @@ impl Target {
     }
 
     fn get_rnd_lifetime(rnd: &mut MTRng32, min: f64, max: f64) -> f64 {
-        let range = max*1000.0 - min*1000.0;
+        let range = max * 1000.0 - min * 1000.0;
         let rnd = rnd.rand() as f64;
         min + ((rnd % range) / 1000.0)
     }
