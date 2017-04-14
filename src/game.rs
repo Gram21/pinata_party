@@ -10,7 +10,6 @@ pub struct Game {
     gl: GlGraphics, // OpenGL drawing backend.
     rand: MTRng32, // TODO other rng generator?
     cursor_position: (f64, f64),
-    timer: f64,
     background: Image,
     bg_texture: Texture,
     aim_texture: Texture,
@@ -40,7 +39,6 @@ impl Game {
             gl: GlGraphics::new(opengl),
             rand: rand,
             cursor_position: (WINDOW_SIZE.0 / 2.0, WINDOW_SIZE.1 / 2.0),
-            timer: 0.0,
             background: Image::new().rect([0.0, 0.0, WINDOW_SIZE.0, WINDOW_SIZE.1]),
             bg_texture: Texture::from_path(Path::new(TEXTURE_BG)).unwrap(),
             aim_texture: Texture::from_path(Path::new(TEXTURE_AIM)).unwrap(),
@@ -91,12 +89,7 @@ impl Game {
     }
 
     pub fn update(&mut self, args: &UpdateArgs) {
-        self.timer += args.dt;
-        // update timer. If greater than one a second passed. Reset then.
-        if self.timer >= 1.0 {
-            self.timer = 0.0;
-            self.update_lifetimes();
-        }
+        self.update_lifetimes(args.dt);
 
         for target in &mut self.evil_targets {
             target.x += target.movement.0 * args.dt;
@@ -116,14 +109,14 @@ impl Game {
         }
     }
 
-    fn update_lifetimes(&mut self) {
+    fn update_lifetimes(&mut self, dt: f64) {
         for targets in [&mut self.evil_targets, &mut self.hero_targets].iter_mut() {
             for i in (0..targets.len()).rev() {
-                if targets[i].lifetime <= 1 {
+                if targets[i].lifetime >= dt {
+                    targets[i].lifetime -= dt;
+                } else {
                     // Lifetime is over, remove them
                     targets.remove(i);
-                } else {
-                    targets[i].lifetime -= 1;
                 }
             }
         }
@@ -158,12 +151,12 @@ pub struct Target {
     pub width: f64,
     pub height: f64,
     pub bounty: u16,
-    pub lifetime: u16,
+    pub lifetime: f64,
     pub  movement: (f64, f64),
 }
 
 impl Target {
-    pub fn new(x: f64, y: f64, width: f64, height: f64, bounty: u16, lifetime: u16, movement: (f64,f64)) -> Self {
+    pub fn new(x: f64, y: f64, width: f64, height: f64, bounty: u16, lifetime: f64, movement: (f64,f64)) -> Self {
         Target {
             x: x,
             y: y,
@@ -179,18 +172,19 @@ impl Target {
         //TODO
         let (x, y) = Self::get_rnd_position(rand);
         let movement = Self::get_rnd_movement(rand);
+        let lifetime = Self::get_rnd_lifetime(rand, 4.0, 7.0);
         Target {
             x: x,
             y: y,
             width: 50.0,
             height: 50.0,
             bounty: 30,
-            lifetime: 6,
+            lifetime: lifetime,
             movement: movement,
         }
     }
 
-    fn get_rnd_movement(rand: &mut MTRng32) -> (f64, f64) {
+    pub fn get_rnd_movement(rand: &mut MTRng32) -> (f64, f64) {
         let x_sgn = if rand.rand() & 1 == 1 {-1.0} else {1.0} ;
         let x = (rand.rand() % 20 as u32) as f64;
         let y_sgn = if rand.rand() & 1 == 1 {-1.0} else {1.0};
@@ -203,6 +197,12 @@ impl Target {
         let x = (rand.rand() % WINDOW_SIZE.0 as u32) as f64;
         let y = (rand.rand() % WINDOW_SIZE.1 as u32) as f64;
         (x, y)
+    }
+
+    fn get_rnd_lifetime(rnd: &mut MTRng32, min: f64, max: f64) -> f64 {
+        let range = max*1000.0 - min*1000.0;
+        let rnd = rnd.rand() as f64;
+        min + ((rnd % range) / 1000.0)
     }
 
     fn coord_is_inside(&mut self, x: f64, y: f64) -> bool {
