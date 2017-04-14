@@ -91,13 +91,21 @@ impl Game {
     pub fn update(&mut self, args: &UpdateArgs) {
         self.update_lifetimes(args.dt);
 
-        for target in &mut self.evil_targets {
-            target.x += target.movement.0 * args.dt;
-            target.y += target.movement.1 * args.dt;
-        }
-        for target in &mut self.hero_targets {
-            target.x += target.movement.0 * args.dt;
-            target.y += target.movement.1 * args.dt;
+        for t in &mut [&mut self.evil_targets, &mut self.hero_targets] {
+            for target in t.iter_mut() {
+                target.x += target.movement.0 * args.dt;
+                target.y += target.movement.1 * args.dt;
+                if target.x <= -50.0 {
+                    target.x = WINDOW_SIZE.0;
+                } else if target.x >= WINDOW_SIZE.0 {
+                    target.x = -50.0;
+                }
+                if target.y <= -50.0 {
+                    target.y = WINDOW_SIZE.1;
+                } else if target.y >= WINDOW_SIZE.1 {
+                    target.y = -50.0;
+                }
+            }
         }
 
         // create new targets if old ones died
@@ -125,10 +133,10 @@ impl Game {
     pub fn process_mouse(&mut self, m: &MouseButton) {
         if let MouseButton::Left = *m {
             for i in Target::check_for_hit(&mut self.evil_targets, self.cursor_position)
-                        .iter()
-                        .rev() {
-                    self.evil_targets.remove(*i);
-                }
+                    .iter()
+                    .rev() {
+                self.evil_targets.remove(*i);
+            }
             for i in Target::check_for_hit(&mut self.hero_targets, self.cursor_position)
                     .iter()
                     .rev() {
