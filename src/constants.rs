@@ -7,3 +7,7 @@ pub static TEXTURE_MEXICAN: &'static str = "img/mexican_cartoon.png";
 // Sizes
 pub const WINDOW_SIZE: (f64, f64) = (480.0, 272.0);
 pub const WINDOW_USIZE: (u32, u32) = (480, 272);
+
+// Game constants
+pub const NUM_EVIL_TARGETS: usize = 5;
+pub const NUM_HERO_TARGETS: usize = 5;

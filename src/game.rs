@@ -25,13 +25,13 @@ impl Game {
         let mut rand = MTRng32::new(42); // TODO better seed
 
         let mut evil_targets: Vec<Target> = Vec::new();
-        for _ in 0..3 {
+        for _ in 0..NUM_EVIL_TARGETS {
             let t = Target::new_rnd(&mut rand);
             evil_targets.push(t);
         }
 
         let mut hero_targets: Vec<Target> = Vec::new();
-        for _ in 0..3 {
+        for _ in 0..NUM_HERO_TARGETS {
             let t = Target::new_rnd(&mut rand);
             hero_targets.push(t);
         }
@@ -98,11 +98,20 @@ impl Game {
             self.update_lifetimes();
         }
 
+        for target in &mut self.evil_targets {
+            target.x += target.movement.0 * args.dt;
+            target.y += target.movement.1 * args.dt;
+        }
+        for target in &mut self.hero_targets {
+            target.x += target.movement.0 * args.dt;
+            target.y += target.movement.1 * args.dt;
+        }
+
         // create new targets if old ones died
-        while self.hero_targets.len() < 3 {
+        while self.hero_targets.len() < NUM_HERO_TARGETS {
             self.hero_targets.push(Target::new_rnd(&mut self.rand));
         }
-        while self.evil_targets.len() < 3 {
+        while self.evil_targets.len() < NUM_EVIL_TARGETS {
             self.evil_targets.push(Target::new_rnd(&mut self.rand));
         }
     }
@@ -150,10 +159,11 @@ pub struct Target {
     pub height: f64,
     pub bounty: u16,
     pub lifetime: u16,
+    pub  movement: (f64, f64),
 }
 
 impl Target {
-    pub fn new(x: f64, y: f64, width: f64, height: f64, bounty: u16, lifetime: u16) -> Self {
+    pub fn new(x: f64, y: f64, width: f64, height: f64, bounty: u16, lifetime: u16, movement: (f64,f64)) -> Self {
         Target {
             x: x,
             y: y,
@@ -161,12 +171,14 @@ impl Target {
             height: height,
             bounty: bounty,
             lifetime: lifetime,
+            movement: movement,
         }
     }
 
     pub fn new_rnd(rand: &mut MTRng32) -> Self {
         //TODO
         let (x, y) = Self::get_rnd_position(rand);
+        let movement = Self::get_rnd_movement(rand);
         Target {
             x: x,
             y: y,
@@ -174,7 +186,16 @@ impl Target {
             height: 50.0,
             bounty: 30,
             lifetime: 6,
+            movement: movement,
         }
+    }
+
+    fn get_rnd_movement(rand: &mut MTRng32) -> (f64, f64) {
+        let x_sgn = if rand.rand() & 1 == 1 {-1.0} else {1.0} ;
+        let x = (rand.rand() % 20 as u32) as f64;
+        let y_sgn = if rand.rand() & 1 == 1 {-1.0} else {1.0};
+        let y = (rand.rand() % 20 as u32) as f64;
+        (x_sgn * x, y_sgn * y)
     }
 
     fn get_rnd_position(rand: &mut MTRng32) -> (f64, f64) {
