@@ -53,12 +53,12 @@ impl Game {
 
         let (x, y) = self.cursor_position;
         let bg = self.background;
-        let ref bg_texture = self.bg_texture;
-        let ref aim_texture = self.aim_texture;
-        let ref hero_texture = self.hero_texture;
-        let ref evil_texture = self.evil_texture;
-        let ref hero_targets = self.hero_targets;
-        let ref evil_targets = self.evil_targets;
+        let bg_texture = &self.bg_texture;
+        let aim_texture = &self.aim_texture;
+        let hero_texture = &self.hero_texture;
+        let evil_texture = &self.evil_texture;
+        let hero_targets = &self.hero_targets;
+        let evil_targets = &self.evil_targets;
 
         self.gl.draw(args.viewport(), |c, gl| {
             use graphics::draw_state::DrawState;
@@ -110,7 +110,7 @@ impl Game {
     }
 
     fn update_lifetimes(&mut self, dt: f64) {
-        for targets in [&mut self.evil_targets, &mut self.hero_targets].iter_mut() {
+        for targets in &mut [&mut self.evil_targets, &mut self.hero_targets] {
             for i in (0..targets.len()).rev() {
                 if targets[i].lifetime >= dt {
                     targets[i].lifetime -= dt;
@@ -123,20 +123,17 @@ impl Game {
     }
 
     pub fn process_mouse(&mut self, m: &MouseButton) {
-        match m {
-            &MouseButton::Left => {
-                for i in Target::check_for_hit(&mut self.evil_targets, self.cursor_position)
+        if let MouseButton::Left = *m {
+            for i in Target::check_for_hit(&mut self.evil_targets, self.cursor_position)
                         .iter()
                         .rev() {
                     self.evil_targets.remove(*i);
                 }
-                for i in Target::check_for_hit(&mut self.hero_targets, self.cursor_position)
-                        .iter()
-                        .rev() {
-                    self.hero_targets.remove(*i);
-                }
+            for i in Target::check_for_hit(&mut self.hero_targets, self.cursor_position)
+                    .iter()
+                    .rev() {
+                self.hero_targets.remove(*i);
             }
-            _ => {}
         }
     }
 
